@@ -1,6 +1,8 @@
 from PIL import Image, ExifTags #using pillow to open in image using its url
 import requests
 import piexif
+import io
+import matplotlib.pyplot as plt
 
 def url():
     #using a url
@@ -20,9 +22,10 @@ def piexample():
 
     exif_dict = piexif.load(im.info['exif'])
 
-    rec_list = ["make", "model", "gps", "maker", "note", "location", "name",
-                "date", "datetime", "description", "software", "device",
-                "longitude", "latitude", "altitude"]
+    # rec_list = ["make", "model", "gps", "maker", "note", "location", "name",
+    #             "date", "datetime", "description", "software", "device",
+    #             "longitude", "latitude", "altitude"]
+    rec_list = ["make"]
     found_tags = []
     found_descriptions = []
     found_recommended = []
@@ -84,11 +87,12 @@ def adjust_exif2(tags_chosen,exif):
                     #print(type(new_exif[tag_space][piexif.ExifIFD.__getattribute__(piexif.ExifIFD,chosen)]))
                     new_exif[tag_space][piexif.ExifIFD.__getattribute__(piexif.ExifIFD,chosen)] = b''
                 elif index == 2:
-                    if type(new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD,chosen)]) is bytes:
+                    tagType = type(new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD,chosen)])
+                    if tagType is bytes:
                         new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD,chosen)] = b''
-                    if type(new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD, chosen)]) is int:
+                    if tagType is int:
                         new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD,chosen)] = 0
-                    if type(new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD, chosen)]) is tuple:
+                    if tagType is tuple:
                         new_exif[tag_space][piexif.GPSIFD.__getattribute__(piexif.GPSIFD,chosen)] = (0,0)
                 else:
                    new_exif[tag_space][piexif.InteropIFD.__getattribute__(piexif.InteropIFD, chosen)] = ""
@@ -103,9 +107,18 @@ def clear_chosen2(im, tags_chosen,exif):
     print("===clear_chosen===")
     new_exif = adjust_exif2(tags_chosen,exif)
     new_bytes = piexif.dump(new_exif)
-    #print(new_exif)
-    piexif.insert(new_bytes, "gps2.jpg")
+    imgByteArr = io.BytesIO()
+    im.save(imgByteArr, format=im.format)
+    imgByteArr = imgByteArr.getvalue()
+    output_image = io.BytesIO()
+    piexif.insert(new_bytes, imgByteArr, output_image)
+    # print(new_exif)
+    # piexif.insert(new_bytes, "gps.jpg")
     print("===finish clear_chosen===")
+    plt.imshow(Image.open(io.BytesIO(output_image.getvalue())))
+    plt.show()
+    with open("gps-exif.jpg", 'wb') as f:
+        f.write( output_image.getbuffer())
     '''
     for tag in tags_chosen:
         im.delete(tag)
