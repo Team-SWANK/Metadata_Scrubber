@@ -107,18 +107,18 @@ def clear_chosen2(im, tags_chosen,exif):
     print("===clear_chosen===")
     new_exif = adjust_exif2(tags_chosen,exif)
     new_bytes = piexif.dump(new_exif)
+
+    # used to test writing to an output buffer without writing to file
     imgByteArr = io.BytesIO()
     im.save(imgByteArr, format=im.format)
     imgByteArr = imgByteArr.getvalue()
     output_image = io.BytesIO()
     piexif.insert(new_bytes, imgByteArr, output_image)
-    # print(new_exif)
-    # piexif.insert(new_bytes, "gps.jpg")
-    print("===finish clear_chosen===")
-    plt.imshow(Image.open(io.BytesIO(output_image.getvalue())))
-    plt.show()
     with open("gps-exif.jpg", 'wb') as f:
         f.write( output_image.getbuffer())
+    
+    # piexif.insert(new_bytes, "gps.jpg")
+    print("===finish clear_chosen===")
     '''
     for tag in tags_chosen:
         im.delete(tag)
